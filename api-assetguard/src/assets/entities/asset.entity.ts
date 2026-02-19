@@ -4,7 +4,7 @@ export enum AssetStatus {
   AVAILABLE = 'AVAILABLE',
   IN_USE = 'IN_USE',
   MAINTENANCE = 'MAINTENANCE',
-  OVERDUE = 'OVERDUE', 
+  OVERDUE = 'OVERDUE',
 }
 
 @Entity('assets')
@@ -12,14 +12,14 @@ export class Asset {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
-  name!: string;
-
-  @Column()
-  description!: string;
+  @Column({ unique: true })
+  internalId!: string;
 
   @Column({ unique: true })
   serialNumber!: string;
+
+  @Column()
+  model!: string;
 
   @Column({
     type: 'varchar',
