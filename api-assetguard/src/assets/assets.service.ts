@@ -25,4 +25,7 @@ export class AssetsService {
     const newAsset = this.assetsRepository.create(assetData);
     return this.assetsRepository.save(newAsset);
   }
+  async findAll(): Promise<Asset[]> {
+    return this.assetsRepository.find();
+  }
 }
