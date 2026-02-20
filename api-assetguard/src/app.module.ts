@@ -5,6 +5,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AssetsModule } from './assets/assets.module';
 import { CollaboratorsModule } from './collaborators/collaborators.module';
+import { MovementsModule } from './movements/movements.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CollaboratorsModule } from './collaborators/collaborators.module';
     AuthModule,
     AssetsModule,
     CollaboratorsModule,
+    MovementsModule,
   ],
   controllers: [],
   providers: [],
