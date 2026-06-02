@@ -3,14 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MovementsService } from './movements.service';
 import { MovementsController } from './movements.controller';
 import { Movement } from './entities/movement.entity';
-import { AssetsModule } from '../assets/assets.module';
-import { CollaboratorsModule } from '../collaborators/collaborators.module';
+import { Asset } from '../assets/entities/asset.entity';
+import { Collaborator } from '../collaborators/entities/collaborator.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Movement]),
-    AssetsModule,
-    CollaboratorsModule
+    // Aqui nós "liberamos" os repositórios para serem usados pelo Service
+    TypeOrmModule.forFeature([Movement, Asset, Collaborator])
   ],
   controllers: [MovementsController],
   providers: [MovementsService],
