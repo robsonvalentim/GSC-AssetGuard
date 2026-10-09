@@ -3,8 +3,9 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, IsNull } from 'typeorm';
+import { Repository, DataSource, IsNull, LessThan, In } from 'typeorm';
 import { Movement, ReturnCondition } from './entities/movement.entity';
 import { Asset, AssetStatus } from '../assets/entities/asset.entity';
 import { Collaborator } from '../collaborators/entities/collaborator.entity';
@@ -23,6 +24,7 @@ export class MovementsService {
     private readonly dataSource: DataSource,
   ) {}
 
+  //Método executado na retirada do coletor
   async checkout(createCheckoutDto: CreateCheckoutDto): Promise<Movement> {
     const { collaboratorId, assetId } = createCheckoutDto;
 
@@ -90,6 +92,7 @@ export class MovementsService {
     }
   }
 
+  //metódo executado na devolução do coletor
   async checkin(updateCheckinDto: UpdateCheckinDto): Promise<Movement> {
     const { assetId, returnCondition, observation } = updateCheckinDto;
 
@@ -147,6 +150,7 @@ export class MovementsService {
     }
   }
 
+  //RETIRAR ESSE MÉTODO?
   async resetDevDb() {
     // 1. Atualiza TODOS os coletores para AVAILABLE forçando via QueryBuilder
     await this.assetRepository
@@ -162,5 +166,45 @@ export class MovementsService {
       message:
         'Banco resetado com sucesso! Coletor DISPONÍVEL e histórico de movimentações apagado.',
     };
+  }
+
+  //Método da cron de OVERDUE
+  // Robô de Background: Varredura de Coletores em Atraso
+  // Configurado para rodar a cada 30 minutos
+  @Cron(CronExpression.EVERY_30_MINUTES)
+  async checkOverdueMovements() {
+    // 1. Calcula a data/hora limite (Turno padrão de 12 horas)
+    const limitDate = new Date();
+    limitDate.setHours(limitDate.getHours() - 12);
+
+    // 2. Busca no banco todos os empréstimos não devolvidos que ultrapassaram as 12 horas
+    const overdueMovements = await this.movementRepository.find({
+      where: {
+        checkInAt: IsNull(),
+        checkOutAt: LessThan(limitDate),
+      },
+    });
+
+    // Se não houver ninguém em atraso, encerra a execução silenciosamente
+    if (overdueMovements.length === 0) {
+      return;
+    }
+
+    // 3. Extrai apenas os IDs dos coletores (ativos) que estão nessa lista de atrasados
+    const assetIds = overdueMovements.map((movement) => movement.assetId);
+
+    // 4. Atualiza o status da tabela de ativos em massa
+    await this.assetRepository.update(
+      {
+        id: In(assetIds),
+        status: AssetStatus.IN_USE, // Trava de segurança: só altera se ainda estiver marcado como "em uso"
+      },
+      { status: AssetStatus.OVERDUE },
+    );
+
+    // 5. Log de monitoramento para a equipe de TI (Terminal/Painel)
+    console.log(
+      `[Cron Job] Varredura concluída: ${assetIds.length} coletor(es) marcado(s) como OVERDUE (Atrasado).`,
+    );
   }
 }
