@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Patch } from '@nestjs/common';
 import { MovementsService } from './movements.service';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
+import { UpdateCheckinDto } from './dto/update-checkin.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('movements')
@@ -11,6 +12,11 @@ export class MovementsController {
   @Post('checkout')
   checkout(@Body() createCheckoutDto: CreateCheckoutDto) {
     return this.movementsService.checkout(createCheckoutDto);
+  }
+
+  @Patch('checkin')
+  checkin(@Body() updateCheckinDto: UpdateCheckinDto) {
+    return this.movementsService.checkin(updateCheckinDto);
   }
 
   // Rota GET para resetar o banco (Apenas para Testes)

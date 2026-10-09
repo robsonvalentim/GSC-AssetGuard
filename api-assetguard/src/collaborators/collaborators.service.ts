@@ -12,18 +12,22 @@ export class CollaboratorsService {
 
   async create(dadosColaborador: Partial<Collaborator>): Promise<Collaborator> {
     // Sanitizacao do CPF: Expressao Regular (Regex) para manter apenas os digitos numericos
-    const cpfLimpo = dadosColaborador.cpf ? dadosColaborador.cpf.replace(/\D/g, '') : '';
+    const cpfLimpo = dadosColaborador.cpf
+      ? dadosColaborador.cpf.replace(/\D/g, '')
+      : '';
 
     if (cpfLimpo.length !== 11) {
       throw new ConflictException('CPF invalido. Deve conter 11 digitos.');
     }
 
     const existingCollaborator = await this.collaboratorsRepository.findOne({
-      where: { cpf: cpfLimpo }
+      where: { cpf: cpfLimpo },
     });
 
     if (existingCollaborator) {
-      throw new ConflictException('Ja existe um colaborador cadastrado com este CPF.');
+      throw new ConflictException(
+        'Ja existe um colaborador cadastrado com este CPF.',
+      );
     }
 
     const novoColaborador = this.collaboratorsRepository.create({
