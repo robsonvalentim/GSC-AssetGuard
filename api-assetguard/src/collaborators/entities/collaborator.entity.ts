@@ -11,6 +11,9 @@ export class Collaborator {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Column({ unique: true })
+  matricula!: string;
+
   @Column()
   nome!: string;
 

@@ -1,21 +1,49 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import 'multer';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CollaboratorsService } from './collaborators.service';
-import { Collaborator } from './entities/collaborator.entity';
 import { AuthGuard } from '@nestjs/passport';
+import { CreateCollaboratorDto } from './dto/create-collaborator.dto';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('collaborators')
 export class CollaboratorsController {
   constructor(private readonly collaboratorsService: CollaboratorsService) {}
 
-  @UseGuards(AuthGuard('jwt'))
-  @Post()
-  async create(@Body() dadosColaborador: Partial<Collaborator>) {
-    return this.collaboratorsService.create(dadosColaborador);
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  importCsv(@UploadedFile() file: Express.Multer.File) {
+    return this.collaboratorsService.importCsv(file);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @Post()
+  create(@Body() createCollaboratorDto: CreateCollaboratorDto) {
+    return this.collaboratorsService.create(createCollaboratorDto);
+  }
+
   @Get()
-  async findAll() {
-    return this.collaboratorsService.findAll();
+  findAll(@Query('search') search?: string) {
+    return this.collaboratorsService.findAll(search);
+  }
+
+  @Patch(':id/deactivate')
+  deactivate(@Param('id') id: string) {
+    return this.collaboratorsService.deactivate(id);
+  }
+
+  @Patch(':id/activate')
+  activate(@Param('id') id: string) {
+    return this.collaboratorsService.activate(id);
   }
 }
